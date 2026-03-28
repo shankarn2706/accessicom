@@ -120,15 +120,15 @@ export default function Chat() {
 
   const intentConfig = {
     emergency: {
-      border: '1px solid rgba(239,68,68,0.4)',
-      bg: 'rgba(239,68,68,0.06)',
+      border: '1px solid rgba(239,68,68,0.5)',
+      bg: 'rgba(239,68,68,0.08)',
       badge: 'bg-red-500 text-white',
       icon: AlertTriangle,
       iconColor: '#ef4444',
     },
     question: {
-      border: '1px solid rgba(255,255,255,0.1)',
-      bg: 'rgba(255,255,255,0.03)',
+      border: '1px solid rgba(255,255,255,0.12)',
+      bg: 'rgba(255,255,255,0.04)',
       badge: 'bg-white text-black',
       icon: HelpCircle,
       iconColor: 'rgba(255,255,255,0.5)',
@@ -155,6 +155,18 @@ export default function Chat() {
   return (
     <main className="min-h-screen bg-black text-white flex flex-col" style={{ fontFamily: 'var(--font-syne)' }}>
 
+      {/* Video Background */}
+      <div className="fixed inset-0 z-0">
+        <video
+          autoPlay muted loop playsInline
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.25 }}
+        >
+          <source src="/chat-bg.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.4), rgba(0,0,0,0.8))' }} />
+      </div>
+
       {/* Emergency Banner */}
       <AnimatePresence>
         {emergency && (
@@ -171,9 +183,7 @@ export default function Chat() {
             </motion.div>
             <div>
               <div className="font-black text-sm tracking-widest uppercase">Emergency Alert</div>
-              <div className="text-red-100 text-xs mt-0.5" style={{ fontFamily: 'var(--font-playfair)' }}>
-                {emergency}
-              </div>
+              <div className="text-red-100 text-xs mt-0.5" style={{ fontFamily: 'var(--font-playfair)' }}>{emergency}</div>
             </div>
             <motion.div
               animate={{ opacity: [1, 0, 1] }}
@@ -187,12 +197,14 @@ export default function Chat() {
       </AnimatePresence>
 
       {/* Navbar */}
-      <Navbar active="Chat" />
+      <div className="relative z-10">
+        <Navbar active="Chat" />
+      </div>
 
       {/* Mode bar */}
       <div
-        className="flex items-center justify-between px-8 py-3 border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.6)' }}
+        className="relative z-10 flex items-center justify-between px-8 py-2.5 border-b"
+        style={{ borderColor: 'rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.4)' }}
       >
         <div className="flex items-center gap-3">
           <motion.div
@@ -200,10 +212,7 @@ export default function Chat() {
             transition={{ duration: 2, repeat: Infinity }}
             className="w-1.5 h-1.5 rounded-full bg-red-500"
           />
-          <span
-            className="text-white/30 text-xs tracking-widest uppercase"
-            style={{ fontFamily: 'var(--font-playfair)' }}
-          >
+          <span className="text-white/30 text-xs tracking-widest uppercase" style={{ fontFamily: 'var(--font-playfair)' }}>
             {profile.disability_type} mode — general room
           </span>
         </div>
@@ -230,13 +239,11 @@ export default function Chat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-8 py-8 space-y-3">
+      <div className="relative z-10 flex-1 overflow-y-auto px-8 py-6 space-y-3">
         {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="text-white/10 text-6xl font-black tracking-widest uppercase mb-4">
-                AccessiCom
-              </div>
+              <div className="text-white/10 text-4xl font-black tracking-widest uppercase mb-3">AccessiCom</div>
               <p className="text-white/20 text-sm" style={{ fontFamily: 'var(--font-playfair)' }}>
                 No messages yet. Start the conversation.
               </p>
@@ -257,7 +264,7 @@ export default function Chat() {
                   animate={{ opacity: 1, y: 0, x: 0 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                   className={`max-w-xl rounded-2xl p-5 ${isOwn ? 'ml-auto' : 'mr-auto'}`}
-                  style={{ background: cfg.bg, border: cfg.border }}
+                  style={{ background: cfg.bg, border: cfg.border, backdropFilter: 'blur(12px)' }}
                 >
                   {msg.intent === 'emergency' && (
                     <motion.div
@@ -271,11 +278,8 @@ export default function Chat() {
                     </motion.div>
                   )}
 
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className="text-xs"
-                      style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-playfair)' }}
-                    >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-playfair)' }}>
                       {msg.sender_name}
                     </span>
                     <div className="flex items-center gap-2">
@@ -283,17 +287,14 @@ export default function Chat() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${cfg.badge}`}>
                         {msg.intent}
                       </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: 'rgba(255,255,255,0.15)', fontFamily: 'var(--font-playfair)' }}
-                      >
+                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.15)', fontFamily: 'var(--font-playfair)' }}>
                         {msg.sentiment} · {Math.round(msg.confidence * 100)}%
                       </span>
                     </div>
                   </div>
 
                   <p
-                    className={`text-white leading-relaxed mb-3 ${profile.disability_type === 'deafblind' ? 'text-2xl font-bold' : 'text-sm'}`}
+                    className={`text-white leading-relaxed mb-3 ${profile.disability_type === 'deafblind' ? 'text-xl font-bold' : 'text-sm'}`}
                     style={{ fontFamily: 'var(--font-playfair)' }}
                   >
                     {msg.content}
@@ -316,10 +317,7 @@ export default function Chat() {
                           />
                         ))}
                       </div>
-                      <span
-                        className="text-xs"
-                        style={{ color: 'rgba(255,255,255,0.15)', fontFamily: 'var(--font-playfair)' }}
-                      >
+                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.15)', fontFamily: 'var(--font-playfair)' }}>
                         Visual delivery confirmed
                       </span>
                     </div>
@@ -338,10 +336,7 @@ export default function Chat() {
                     >
                       <Volume2 size={10} /> Speak
                     </motion.button>
-                    <span
-                      className="text-xs"
-                      style={{ color: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-playfair)' }}
-                    >
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-playfair)' }}>
                       {new Date(msg.created_at).toLocaleTimeString()}
                     </span>
                   </div>
@@ -353,15 +348,12 @@ export default function Chat() {
       </div>
 
       {/* Input */}
-      <motion.div
-        initial={{ y: 40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="px-8 py-6 border-t"
+      <div
+        className="relative z-10 px-8 py-5 border-t"
         style={{
           borderColor: 'rgba(255,255,255,0.06)',
-          background: 'rgba(0,0,0,0.95)',
-          backdropFilter: 'blur(20px)',
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(24px)',
         }}
       >
         <div className="flex items-center gap-4 max-w-4xl mx-auto">
@@ -377,7 +369,6 @@ export default function Chat() {
             className="flex-1 bg-transparent text-white text-sm py-3 focus:outline-none"
             style={{
               fontFamily: 'var(--font-playfair)',
-              color: 'white',
               borderBottom: '1px solid rgba(255,255,255,0.1)',
               caretColor: '#ef4444',
             }}
@@ -405,7 +396,7 @@ export default function Chat() {
             disabled={!input.trim()}
             whileHover={{ scale: 1.04, backgroundColor: input.trim() ? '#ef4444' : undefined }}
             whileTap={{ scale: 0.96 }}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 flex-shrink-0"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-black tracking-widest uppercase transition-all duration-300 flex-shrink-0"
             style={{
               background: input.trim() ? 'white' : 'rgba(255,255,255,0.04)',
               color: input.trim() ? 'black' : 'rgba(255,255,255,0.2)',
@@ -415,7 +406,7 @@ export default function Chat() {
             <Send size={12} /> Send
           </motion.button>
         </div>
-      </motion.div>
+      </div>
     </main>
   )
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EarOff, MicOff, Hand, User, ArrowRight, Check } from 'lucide-react'
+import Navbar from '../components/Navbar'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -38,40 +39,52 @@ export default function Onboarding() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex" style={{ fontFamily: 'var(--font-syne)' }}>
+    <main className="min-h-screen bg-black text-white flex flex-col" style={{ fontFamily: 'var(--font-syne)' }}>
 
-      {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-2/5 p-12 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="font-black text-xl tracking-widest uppercase">AccessiCom</div>
-        <div>
-          <div className="text-red-500 text-xs tracking-[0.3em] uppercase font-medium mb-4">Setup</div>
-          <h2
-            className="font-black uppercase leading-none mb-6"
-            style={{ fontSize: 'clamp(36px, 4vw, 56px)', letterSpacing: '-0.02em' }}
-          >
-            CHOOSE<br />
-            YOUR<br />
-            <span className="text-white/20">MODE</span>
-          </h2>
-          <p className="text-white/30 text-sm leading-relaxed" style={{ fontFamily: 'var(--font-playfair)' }}>
-            Select how you want to receive messages. This can be changed anytime from the chat settings.
-          </p>
-        </div>
-        <div className="text-white/10 text-xs" style={{ fontFamily: 'var(--font-playfair)' }}>
-          AccessiCom © 2026
-        </div>
+      {/* Video Background */}
+      <div className="fixed inset-0 z-0">
+        <video
+          autoPlay muted loop playsInline
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.2 }}
+        >
+          <source src="/chat-bg.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5), rgba(0,0,0,0.9))' }} />
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 flex flex-col justify-center px-8 lg:px-16 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="lg:hidden font-black text-xl tracking-widest uppercase mb-12">AccessiCom</div>
+      {/* Navbar */}
+      <div className="relative z-10">
+        <Navbar active="Home" />
+      </div>
 
-          <div className="space-y-2 mb-10">
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-8 py-12">
+        <div className="w-full max-w-2xl">
+
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-10"
+          >
+            <div className="text-red-500 text-xs tracking-[0.3em] uppercase font-medium mb-3">Setup</div>
+            <h1
+              className="font-black uppercase leading-none mb-3"
+              style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-0.02em' }}
+            >
+              Choose Your
+              <br />
+              <span className="text-white/20">Access Mode</span>
+            </h1>
+            <p className="text-white/30 text-sm" style={{ fontFamily: 'var(--font-playfair)' }}>
+              Select how you want to receive messages. You can change this anytime.
+            </p>
+          </motion.div>
+
+          {/* Options */}
+          <div className="space-y-2 mb-8">
             {types.map((t, i) => (
               <motion.button
                 key={t.id}
@@ -81,20 +94,21 @@ export default function Onboarding() {
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => setSelected(t.id)}
-                className="w-full flex items-center gap-5 p-5 rounded-2xl text-left transition-all duration-200 group"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all duration-200"
                 style={{
-                  background: selected === t.id ? 'rgba(255,255,255,0.04)' : 'transparent',
-                  border: selected === t.id ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent',
+                  background: selected === t.id ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+                  border: selected === t.id ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.04)',
+                  backdropFilter: 'blur(12px)',
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200"
                   style={{
-                    background: selected === t.id ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)',
-                    border: selected === t.id ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)',
+                    background: selected === t.id ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: selected === t.id ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(255,255,255,0.06)',
                   }}
                 >
-                  <t.icon size={16} style={{ color: selected === t.id ? '#ef4444' : 'rgba(255,255,255,0.3)' }} />
+                  <t.icon size={15} style={{ color: selected === t.id ? '#ef4444' : 'rgba(255,255,255,0.3)' }} />
                 </div>
                 <div className="flex-1">
                   <div className="text-white font-bold text-sm mb-0.5">{t.label}</div>
@@ -110,7 +124,7 @@ export default function Onboarding() {
                       exit={{ scale: 0, opacity: 0 }}
                       className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0"
                     >
-                      <Check size={11} className="text-white" />
+                      <Check size={10} className="text-white" />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -118,12 +132,13 @@ export default function Onboarding() {
             ))}
           </div>
 
+          {/* Submit */}
           <motion.button
             onClick={handleSubmit}
             disabled={loading}
             whileHover={{ scale: 1.02, backgroundColor: '#ef4444' }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-3 px-8 py-4 rounded-full bg-white text-black font-bold text-sm tracking-wide transition-all duration-300 disabled:opacity-40"
+            className="flex items-center gap-3 px-8 py-4 rounded-full bg-white text-black font-black text-sm tracking-widest uppercase transition-all duration-300 disabled:opacity-40"
           >
             {loading ? (
               <motion.div
@@ -132,10 +147,10 @@ export default function Onboarding() {
                 className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full"
               />
             ) : (
-              <>Continue to Chat <ArrowRight size={16} /></>
+              <>Continue to Chat <ArrowRight size={14} /></>
             )}
           </motion.button>
-        </motion.div>
+        </div>
       </div>
     </main>
   )
