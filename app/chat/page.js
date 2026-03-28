@@ -4,6 +4,7 @@ import { useUser } from '@clerk/nextjs'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import BrailleGrid from '../components/BrailleGrid'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -18,7 +19,6 @@ export default function Chat() {
   const [profile, setProfile] = useState(null)
   const [listening, setListening] = useState(false)
   const [emergency, setEmergency] = useState(null)
-  const [typing, setTyping] = useState(false)
   const bottomRef = useRef(null)
 
   useEffect(() => { if (user) fetchProfile() }, [user])
@@ -90,11 +90,6 @@ export default function Chat() {
     speak('Emergency alert: ' + text)
   }
 
-  const toBraille = (text) => {
-    const map = {a:'⠁',b:'⠃',c:'⠉',d:'⠙',e:'⠑',f:'⠋',g:'⠛',h:'⠓',i:'⠊',j:'⠚',k:'⠅',l:'⠇',m:'⠍',n:'⠝',o:'⠕',p:'⠏',q:'⠟',r:'⠗',s:'⠎',t:'⠞',u:'⠥',v:'⠧',w:'⠺',x:'⠭',y:'⠽',z:'⠵',' ':'⠀'}
-    return text.toLowerCase().split('').map(c => map[c] || c).join('')
-  }
-
   const sendMessage = async () => {
     if (!input.trim()) return
     const { intent, confidence } = classifyMessage(input)
@@ -150,7 +145,6 @@ export default function Chat() {
   return (
     <main className={`min-h-screen flex flex-col bg-gradient-to-br ${bg} relative overflow-hidden`}>
 
-      {/* Background orbs */}
       <motion.div
         animate={{ x: [0, 40, 0], y: [0, -40, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
@@ -162,7 +156,6 @@ export default function Chat() {
         className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"
       />
 
-      {/* Emergency Banner */}
       <AnimatePresence>
         {emergency && (
           <motion.div
@@ -194,7 +187,6 @@ export default function Chat() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
       <motion.div
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -240,15 +232,22 @@ export default function Chat() {
           >
             ⚙️ Mode
           </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('/admin')}
+            className="text-blue-300 hover:text-white text-sm border border-blue-400/30 hover:border-blue-400 px-4 py-2 rounded-full backdrop-blur transition-all"
+          >
+            🛠 Admin
+          </motion.button>
         </div>
       </motion.div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 relative z-10">
         <AnimatePresence initial={false}>
           {[...messages]
             .sort((a, b) => b.urgency - a.urgency || new Date(a.created_at) - new Date(b.created_at))
-            .map((msg, i) => {
+            .map((msg) => {
               const cfg = intentConfig[msg.intent] || intentConfig.normal
               const isOwn = msg.sender_id === user?.id
               return (
@@ -257,13 +256,13 @@ export default function Chat() {
                   initial={{ opacity: 0, x: isOwn ? 50 : -50, y: 20 }}
                   animate={{ opacity: 1, x: 0, y: 0 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className={`border rounded-2xl p-4 shadow-lg ${cfg.border} ${cfg.bg} ${cfg.glow} ${msg.intent === 'emergency' ? 'shadow-red-500/40 shadow-lg' : ''} max-w-2xl ${isOwn ? 'ml-auto' : 'mr-auto'}`}
+                  className={`border rounded-2xl p-4 shadow-lg ${cfg.border} ${cfg.bg} ${cfg.glow} max-w-2xl ${isOwn ? 'ml-auto' : 'mr-auto'}`}
                 >
                   {msg.intent === 'emergency' && (
                     <motion.div
                       animate={{ opacity: [1, 0.5, 1] }}
                       transition={{ duration: 0.8, repeat: Infinity }}
-                      className="text-red-400 font-black text-xs mb-2 flex items-center gap-1"
+                      className="text-red-400 font-black text-xs mb-2"
                     >
                       🚨 EMERGENCY — PRIORITY MESSAGE
                     </motion.div>
@@ -288,27 +287,11 @@ export default function Chat() {
                     {msg.content}
                   </p>
 
-                  {/* Braille output */}
                   {profile.disability_type === 'deafblind' && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-3 mb-3"
-                    >
-                      <div className="text-yellow-300 text-xs font-bold mb-1">⠿ BRAILLE OUTPUT</div>
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ staggerChildren: 0.05 }}
-                        className="text-yellow-200 text-lg tracking-widest font-mono"
-                      >
-                        {toBraille(msg.content)}
-                      </motion.p>
-                    </motion.div>
+                    <BrailleGrid text={msg.content} />
                   )}
 
-                  {/* Deaf visual indicator */}
-                  {(profile.disability_type === 'deaf') && (
+                  {profile.disability_type === 'deaf' && (
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
@@ -325,7 +308,7 @@ export default function Chat() {
                     </div>
                   )}
 
-                  <div className="flex gap-3 mt-1">
+                  <div className="flex gap-3 mt-2">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -345,7 +328,6 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <motion.div
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -355,7 +337,7 @@ export default function Chat() {
         <div className="flex gap-3 max-w-4xl mx-auto">
           <motion.input
             value={input}
-            onChange={e => { setInput(e.target.value); setTyping(true); setTimeout(() => setTyping(false), 1000) }}
+            onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && sendMessage()}
             placeholder={
               profile.disability_type === 'blind' ? '🦯 Type or use microphone...' :
