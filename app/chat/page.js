@@ -4,6 +4,7 @@ import { useUser } from '@clerk/nextjs'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Send, Mic, MicOff, Volume2, Settings, LayoutDashboard, AlertTriangle, CheckCircle, HelpCircle, Radio } from 'lucide-react'
 import BrailleGrid from '../components/BrailleGrid'
 
 const supabase = createClient(
@@ -57,7 +58,7 @@ export default function Chat() {
 
   const classifyMessage = (text) => {
     const lower = text.toLowerCase()
-    const emergencyWords = ['help', 'fire', 'danger', 'emergency', 'police', 'ambulance', 'bleeding', 'trapped', 'accident', 'injured', 'pain', 'attack']
+    const emergencyWords = ['help', 'fire', 'danger', 'emergency', 'police', 'ambulance', 'bleeding', 'trapped', 'accident', 'injured', 'attack']
     const questionWords = ['what', 'where', 'when', 'how', 'why', 'who', 'are you', 'do you', 'can you', 'shall', 'is it', 'will you']
     if (emergencyWords.some(w => lower.includes(w))) return { intent: 'emergency', confidence: 0.95 }
     if (questionWords.some(w => lower.includes(w))) return { intent: 'question', confidence: 0.85 }
@@ -67,7 +68,7 @@ export default function Chat() {
   const analyzeSentiment = (text) => {
     const lower = text.toLowerCase()
     const positive = ['good', 'great', 'thanks', 'fine', 'okay', 'hello', 'hi', 'morning', 'happy', 'love', 'nice']
-    const negative = ['bad', 'hurt', 'pain', 'scared', 'help', 'danger', 'emergency', 'sad', 'angry', 'hate']
+    const negative = ['bad', 'hurt', 'pain', 'scared', 'help', 'danger', 'emergency', 'sad', 'angry']
     if (negative.some(w => lower.includes(w))) return 'negative'
     if (positive.some(w => lower.includes(w))) return 'positive'
     return 'neutral'
@@ -80,9 +81,9 @@ export default function Chat() {
   }
 
   const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.9
-    window.speechSynthesis.speak(utterance)
+    const u = new SpeechSynthesisUtterance(text)
+    u.rate = 0.9
+    window.speechSynthesis.speak(u)
   }
 
   const triggerEmergencyAlert = (text) => {
@@ -106,184 +107,189 @@ export default function Chat() {
   }
 
   const startListening = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) return alert('Use Microsoft Edge for speech recognition')
-    const recognition = new SpeechRecognition()
-    recognition.lang = 'en-US'
-    recognition.onstart = () => setListening(true)
-    recognition.onresult = (e) => setInput(e.results[0][0].transcript)
-    recognition.onend = () => setListening(false)
-    recognition.start()
-  }
-
-  const modeColors = {
-    general: 'from-blue-950 via-indigo-900 to-purple-900',
-    blind: 'from-gray-950 via-gray-900 to-gray-800',
-    deaf: 'from-blue-950 via-blue-900 to-cyan-900',
-    mute: 'from-indigo-950 via-purple-900 to-pink-900',
-    deafblind: 'from-black via-gray-950 to-black',
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) return alert('Use Microsoft Edge for speech recognition')
+    const r = new SR()
+    r.lang = 'en-US'
+    r.onstart = () => setListening(true)
+    r.onresult = (e) => setInput(e.results[0][0].transcript)
+    r.onend = () => setListening(false)
+    r.start()
   }
 
   const intentConfig = {
-    emergency: { border: 'border-red-500', bg: 'bg-red-500/10', badge: 'bg-red-500 text-white', glow: 'shadow-red-500/30' },
-    question: { border: 'border-yellow-400', bg: 'bg-yellow-400/10', badge: 'bg-yellow-400 text-black', glow: 'shadow-yellow-400/20' },
-    normal: { border: 'border-white/10', bg: 'bg-white/5', badge: 'bg-green-500 text-white', glow: 'shadow-black/20' },
+    emergency: {
+      border: 'border-red-500/50',
+      bg: 'rgba(239,68,68,0.05)',
+      badge: 'bg-red-500 text-white',
+      icon: AlertTriangle,
+      iconColor: '#ef4444',
+    },
+    question: {
+      border: 'border-white/10',
+      bg: 'rgba(255,255,255,0.02)',
+      badge: 'bg-white text-black',
+      icon: HelpCircle,
+      iconColor: '#ffffff',
+    },
+    normal: {
+      border: 'border-white/06',
+      bg: 'rgba(255,255,255,0.01)',
+      badge: 'bg-white/10 text-white',
+      icon: CheckCircle,
+      iconColor: 'rgba(255,255,255,0.3)',
+    },
   }
 
   if (!profile) return (
-    <div className="min-h-screen bg-[#020818] flex items-center justify-center">
+    <div className="min-h-screen bg-black flex items-center justify-center">
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full"
+        className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full"
       />
     </div>
   )
 
-  const bg = modeColors[profile.disability_type] || modeColors.general
-
   return (
-    <main className={`min-h-screen flex flex-col bg-gradient-to-br ${bg} relative overflow-hidden`}>
+    <main className="min-h-screen bg-black text-white flex flex-col" style={{ fontFamily: 'var(--font-syne)' }}>
 
-      <motion.div
-        animate={{ x: [0, 40, 0], y: [0, -40, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"
-      />
-      <motion.div
-        animate={{ x: [0, -30, 0], y: [0, 30, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"
-      />
-
+      {/* Emergency Banner */}
       <AnimatePresence>
         {emergency && (
           <motion.div
-            initial={{ y: -100, opacity: 0 }}
+            initial={{ y: -80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-            className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white px-6 py-4 flex items-center gap-3 shadow-2xl"
+            exit={{ y: -80, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="fixed top-0 left-0 right-0 z-50 flex items-center gap-4 px-8 py-4"
+            style={{ background: '#ef4444', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
           >
-            <motion.span
-              animate={{ scale: [1, 1.3, 1] }}
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 0.5, repeat: Infinity }}
-              className="text-2xl"
             >
-              🚨
-            </motion.span>
+              <AlertTriangle size={20} className="text-white" />
+            </motion.div>
             <div>
-              <div className="font-black text-lg">EMERGENCY ALERT</div>
-              <div className="text-red-100 text-sm">{emergency}</div>
+              <div className="font-black text-sm tracking-widest uppercase">Emergency Alert</div>
+              <div className="text-red-100 text-xs mt-0.5" style={{ fontFamily: 'var(--font-playfair)' }}>{emergency}</div>
             </div>
             <motion.div
               animate={{ opacity: [1, 0, 1] }}
-              transition={{ duration: 0.5, repeat: Infinity }}
-              className="ml-auto text-red-200 text-sm"
+              transition={{ duration: 1, repeat: Infinity }}
+              className="ml-auto flex items-center gap-2 text-red-100 text-xs tracking-widest uppercase"
             >
-              ● LIVE
+              <Radio size={12} /> Live
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Header */}
       <motion.div
-        initial={{ y: -60, opacity: 0 }}
+        initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="bg-black/30 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex justify-between items-center relative z-10"
+        className="flex items-center justify-between px-8 py-5 border-b"
+        style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 40 }}
       >
-        <div className="flex items-center gap-3">
-          <motion.div
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-black"
-          >
-            A
-          </motion.div>
+        <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-white font-black text-xl tracking-tight">AccessiCom</h1>
-            <div className="flex items-center gap-2">
-              <motion.span
-                animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+            <div className="font-black text-lg tracking-widest uppercase">AccessiCom</div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <motion.div
+                animate={{ scale: [1, 1.5, 1], opacity: [1, 0.3, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="w-2 h-2 bg-green-400 rounded-full inline-block"
+                className="w-1.5 h-1.5 rounded-full bg-red-500"
               />
-              <span className="text-green-400 text-xs font-medium capitalize">
-                {profile.disability_type} mode · Live
+              <span className="text-white/30 text-xs tracking-widest uppercase" style={{ fontFamily: 'var(--font-playfair)' }}>
+                {profile.disability_type} mode — live
               </span>
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.06)' }}
             whileTap={{ scale: 0.95 }}
             onClick={() => speak(messages.map(m => m.content).join('. '))}
-            className="text-blue-300 hover:text-white text-sm border border-blue-400/30 hover:border-blue-400 px-4 py-2 rounded-full backdrop-blur transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white transition-all"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            🔊 Read All
+            <Volume2 size={13} /> Read All
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.06)' }}
             whileTap={{ scale: 0.95 }}
             onClick={() => router.push('/onboarding')}
-            className="text-blue-300 hover:text-white text-sm border border-blue-400/30 hover:border-blue-400 px-4 py-2 rounded-full backdrop-blur transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white transition-all"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            ⚙️ Mode
+            <Settings size={13} /> Mode
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.06)' }}
             whileTap={{ scale: 0.95 }}
             onClick={() => router.push('/admin')}
-            className="text-blue-300 hover:text-white text-sm border border-blue-400/30 hover:border-blue-400 px-4 py-2 rounded-full backdrop-blur transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-xs text-white/40 hover:text-white transition-all"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            🛠 Admin
+            <LayoutDashboard size={13} /> Admin
           </motion.button>
         </div>
       </motion.div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 relative z-10">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-8 py-8 space-y-3">
         <AnimatePresence initial={false}>
           {[...messages]
             .sort((a, b) => b.urgency - a.urgency || new Date(a.created_at) - new Date(b.created_at))
             .map((msg) => {
               const cfg = intentConfig[msg.intent] || intentConfig.normal
               const isOwn = msg.sender_id === user?.id
+              const IntentIcon = cfg.icon
               return (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, x: isOwn ? 50 : -50, y: 20 }}
-                  animate={{ opacity: 1, x: 0, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className={`border rounded-2xl p-4 shadow-lg ${cfg.border} ${cfg.bg} ${cfg.glow} max-w-2xl ${isOwn ? 'ml-auto' : 'mr-auto'}`}
+                  initial={{ opacity: 0, y: 20, x: isOwn ? 20 : -20 }}
+                  animate={{ opacity: 1, y: 0, x: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  className={`max-w-2xl border rounded-2xl p-5 ${cfg.border} ${isOwn ? 'ml-auto' : 'mr-auto'}`}
+                  style={{ background: cfg.bg }}
                 >
                   {msg.intent === 'emergency' && (
                     <motion.div
                       animate={{ opacity: [1, 0.5, 1] }}
-                      transition={{ duration: 0.8, repeat: Infinity }}
-                      className="text-red-400 font-black text-xs mb-2"
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="flex items-center gap-2 mb-3 text-red-400"
                     >
-                      🚨 EMERGENCY — PRIORITY MESSAGE
+                      <AlertTriangle size={12} />
+                      <span className="text-xs tracking-widest uppercase font-bold">Priority Emergency</span>
                     </motion.div>
                   )}
 
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-blue-200 text-xs font-bold">{msg.sender_name}</span>
-                    <div className="flex gap-1.5">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${cfg.badge}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-white/30 text-xs tracking-wide" style={{ fontFamily: 'var(--font-playfair)' }}>
+                      {msg.sender_name}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <IntentIcon size={11} style={{ color: cfg.iconColor }} />
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold tracking-wide ${cfg.badge}`}>
                         {msg.intent}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full border border-white/20 text-white/60">
+                      <span className="text-xs text-white/20" style={{ fontFamily: 'var(--font-playfair)' }}>
                         {msg.sentiment}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full border border-white/10 text-white/40">
+                      <span className="text-xs text-white/20">
                         {Math.round(msg.confidence * 100)}%
                       </span>
                     </div>
                   </div>
 
-                  <p className={`text-white mb-3 ${profile.disability_type === 'deafblind' ? 'text-2xl font-bold' : 'text-base'}`}>
+                  <p
+                    className={`text-white leading-relaxed mb-3 ${profile.disability_type === 'deafblind' ? 'text-2xl font-bold' : 'text-base'}`}
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
                     {msg.content}
                   </p>
 
@@ -292,32 +298,34 @@ export default function Chat() {
                   )}
 
                   {profile.disability_type === 'deaf' && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex gap-0.5">
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex gap-0.5 items-end">
                         {[...Array(5)].map((_, i) => (
                           <motion.div
                             key={i}
                             animate={{ scaleY: [1, 2, 1] }}
-                            transition={{ duration: 0.5, repeat: 3, delay: i * 0.1 }}
-                            className="w-1 bg-blue-400 rounded-full"
-                            style={{ height: '12px' }}
+                            transition={{ duration: 0.6, repeat: 2, delay: i * 0.1 }}
+                            className="w-0.5 bg-white/30 rounded-full"
+                            style={{ height: '10px' }}
                           />
                         ))}
                       </div>
-                      <span className="text-blue-300 text-xs">Visual delivery confirmed</span>
+                      <span className="text-white/20 text-xs" style={{ fontFamily: 'var(--font-playfair)' }}>
+                        Visual delivery confirmed
+                      </span>
                     </div>
                   )}
 
-                  <div className="flex gap-3 mt-2">
+                  <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => speak(msg.content)}
-                      className="text-xs text-blue-300 hover:text-white flex items-center gap-1 transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-white/20 hover:text-white transition-colors"
                     >
-                      🔊 Speak
+                      <Volume2 size={11} /> Speak
                     </motion.button>
-                    <span className="text-xs text-white/20">
+                    <span className="text-white/10 text-xs" style={{ fontFamily: 'var(--font-playfair)' }}>
                       {new Date(msg.created_at).toLocaleTimeString()}
                     </span>
                   </div>
@@ -328,48 +336,59 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
+      {/* Input */}
       <motion.div
-        initial={{ y: 80, opacity: 0 }}
+        initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="bg-black/40 backdrop-blur-xl border-t border-white/10 px-4 py-4 relative z-10"
+        transition={{ delay: 0.3 }}
+        className="px-8 py-6 border-t"
+        style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}
       >
-        <div className="flex gap-3 max-w-4xl mx-auto">
-          <motion.input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && sendMessage()}
-            placeholder={
-              profile.disability_type === 'blind' ? '🦯 Type or use microphone...' :
-              profile.disability_type === 'deaf' ? '🤟 Type your message...' :
-              profile.disability_type === 'mute' ? '🎙️ Use microphone to speak...' :
-              'Type a message...'
-            }
-            className="flex-1 bg-white/10 text-white placeholder-white/30 border border-white/20 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-purple-400 focus:bg-white/15 transition-all"
-          />
+        <div className="flex items-center gap-3 max-w-4xl mx-auto">
+          <div className="flex-1 relative">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && sendMessage()}
+              placeholder={
+                profile.disability_type === 'blind' ? 'Type or use microphone...' :
+                profile.disability_type === 'mute' ? 'Use microphone to speak...' :
+                'Type a message...'
+              }
+              className="w-full bg-transparent text-white placeholder-white/20 text-sm py-3.5 px-0 focus:outline-none"
+              style={{
+                fontFamily: 'var(--font-playfair)',
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+              }}
+            />
+          </div>
           <motion.button
             onClick={startListening}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`px-4 py-3 rounded-2xl font-bold transition-all ${listening ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-white/10 hover:bg-white/20 border border-white/20'} text-white`}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+            style={{
+              background: listening ? '#ef4444' : 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           >
             {listening ? (
-              <motion.span
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-              >
-                🎙️
-              </motion.span>
-            ) : '🎙️'}
+              <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 0.5, repeat: Infinity }}>
+                <MicOff size={14} className="text-white" />
+              </motion.div>
+            ) : (
+              <Mic size={14} className="text-white/40" />
+            )}
           </motion.button>
           <motion.button
             onClick={sendMessage}
-            whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(139,92,246,0.5)' }}
-            whileTap={{ scale: 0.95 }}
             disabled={!input.trim()}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold px-8 py-3.5 rounded-2xl transition-all disabled:opacity-40"
+            whileHover={{ scale: 1.05, backgroundColor: input.trim() ? '#ef4444' : undefined }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 disabled:opacity-20"
+            style={{ background: input.trim() ? 'white' : 'rgba(255,255,255,0.06)', color: input.trim() ? 'black' : 'white' }}
           >
-            Send ↗
+            <Send size={14} /> Send
           </motion.button>
         </div>
       </motion.div>

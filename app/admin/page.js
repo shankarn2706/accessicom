@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { AlertTriangle, HelpCircle, CheckCircle, Users, MessageSquare, Brain, ArrowLeft, RefreshCw } from 'lucide-react'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -16,9 +17,7 @@ export default function Admin() {
   const [stats, setStats] = useState({ total: 0, emergency: 0, question: 0, normal: 0 })
   const router = useRouter()
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  useEffect(() => { fetchData() }, [])
 
   const fetchData = async () => {
     const { data: msgs } = await supabase.from('messages').select('*').order('created_at', { ascending: false })
@@ -35,213 +34,188 @@ export default function Admin() {
     }
   }
 
-  const intentBadge = (intent) => {
-    if (intent === 'emergency') return 'bg-red-500 text-white'
-    if (intent === 'question') return 'bg-yellow-400 text-black'
-    return 'bg-green-500 text-white'
-  }
+  const tabs = [
+    { id: 'logs', label: 'Message Logs', icon: MessageSquare },
+    { id: 'users', label: 'Users', icon: Users },
+    { id: 'ml', label: 'ML Pipeline', icon: Brain },
+  ]
 
-  const sentimentBadge = (sentiment) => {
-    if (sentiment === 'positive') return 'bg-green-500/20 text-green-300 border-green-500/30'
-    if (sentiment === 'negative') return 'bg-red-500/20 text-red-300 border-red-500/30'
-    return 'bg-white/10 text-white/50 border-white/10'
-  }
-
-  const disabilityColor = (type) => {
-    const colors = {
-      general: 'bg-green-500/20 text-green-300',
-      blind: 'bg-purple-500/20 text-purple-300',
-      deaf: 'bg-blue-500/20 text-blue-300',
-      mute: 'bg-pink-500/20 text-pink-300',
-      deafblind: 'bg-yellow-500/20 text-yellow-300',
-    }
-    return colors[type] || colors.general
-  }
+  const statCards = [
+    { label: 'Total Messages', value: stats.total, icon: MessageSquare, color: '#ffffff' },
+    { label: 'Emergency', value: stats.emergency, icon: AlertTriangle, color: '#ef4444' },
+    { label: 'Questions', value: stats.question, icon: HelpCircle, color: '#ffffff' },
+    { label: 'Normal', value: stats.normal, icon: CheckCircle, color: 'rgba(255,255,255,0.3)' },
+  ]
 
   return (
-    <main className="min-h-screen bg-[#020818] text-white relative overflow-hidden">
-
-      {/* Background */}
-      <motion.div
-        animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"
-      />
-      <motion.div
-        animate={{ x: [0, -30, 0], y: [0, 40, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"
-      />
+    <main className="min-h-screen bg-black text-white" style={{ fontFamily: 'var(--font-syne)' }}>
 
       {/* Header */}
-      <motion.div
-        initial={{ y: -60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="bg-black/30 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex justify-between items-center relative z-10"
+      <div
+        className="flex items-center justify-between px-8 py-5 border-b sticky top-0 z-40"
+        style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)' }}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center font-black text-lg">
-            A
-          </div>
-          <div>
-            <h1 className="font-black text-xl">AccessiCom Admin</h1>
-            <p className="text-white/40 text-xs">System Dashboard</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-4">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={fetchData}
-            className="border border-white/20 hover:border-white/40 px-4 py-2 rounded-full text-sm text-white/70 hover:text-white transition-all"
-          >
-            🔄 Refresh
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ x: -3 }}
             onClick={() => router.push('/chat')}
-            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-full text-sm font-bold transition-all"
+            className="flex items-center gap-2 text-white/30 hover:text-white text-xs transition-colors"
           >
-            → Back to Chat
+            <ArrowLeft size={14} /> Back
           </motion.button>
+          <div className="w-px h-4 bg-white/10" />
+          <div className="font-black text-lg tracking-widest uppercase">Admin Panel</div>
         </div>
-      </motion.div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95, rotate: 180 }}
+          onClick={fetchData}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-xs text-white/30 hover:text-white transition-all"
+          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <RefreshCw size={12} /> Refresh
+        </motion.button>
+      </div>
 
-      <div className="relative z-10 p-6 max-w-7xl mx-auto">
+      <div className="px-8 py-8 max-w-7xl mx-auto">
 
         {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-4 gap-4 mb-8"
-        >
-          {[
-            { label: 'Total Messages', value: stats.total, color: 'from-purple-500 to-blue-500', icon: '💬' },
-            { label: 'Emergency', value: stats.emergency, color: 'from-red-500 to-orange-500', icon: '🚨' },
-            { label: 'Questions', value: stats.question, color: 'from-yellow-400 to-orange-400', icon: '❓' },
-            { label: 'Normal', value: stats.normal, color: 'from-green-500 to-teal-500', icon: '✅' },
-          ].map((s, i) => (
+        <div className="grid grid-cols-4 gap-px bg-white/06 rounded-2xl overflow-hidden mb-8">
+          {statCards.map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.1 }}
-              whileHover={{ y: -4, scale: 1.02 }}
-              className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur"
+              transition={{ delay: i * 0.1 }}
+              className="bg-black p-8 group hover:bg-white/02 transition-all"
             >
-              <div className="text-2xl mb-2">{s.icon}</div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-                className={`text-4xl font-black bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}
+              <s.icon size={16} style={{ color: s.color }} className="mb-4 opacity-50" />
+              <div
+                className="font-black mb-1"
+                style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontFamily: 'var(--font-syne)', color: s.color }}
               >
                 {s.value}
-              </motion.div>
-              <div className="text-white/50 text-sm mt-1">{s.label}</div>
+              </div>
+              <div className="text-white/30 text-xs tracking-widest uppercase" style={{ fontFamily: 'var(--font-playfair)' }}>
+                {s.label}
+              </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {['logs', 'users', 'ml'].map((t) => (
+        <div className="flex gap-1 mb-8 p-1 rounded-full w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {tabs.map((t) => (
             <motion.button
-              key={t}
-              whileHover={{ scale: 1.03 }}
+              key={t.id}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setTab(t)}
-              className={`px-5 py-2.5 rounded-full text-sm font-bold capitalize transition-all ${
-                tab === t
-                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
-                  : 'bg-white/5 border border-white/10 text-white/50 hover:text-white'
-              }`}
+              onClick={() => setTab(t.id)}
+              className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold tracking-wide transition-all duration-200"
+              style={{
+                background: tab === t.id ? 'white' : 'transparent',
+                color: tab === t.id ? 'black' : 'rgba(255,255,255,0.3)',
+              }}
             >
-              {t === 'logs' ? '📋 Message Logs' : t === 'users' ? '👥 Users' : '🧠 ML Stats'}
+              <t.icon size={12} /> {t.label}
             </motion.button>
           ))}
         </div>
 
-        {/* Message Logs Tab */}
+        {/* Content */}
         <AnimatePresence mode="wait">
+
           {tab === 'logs' && (
             <motion.div
               key="logs"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-3"
+              className="space-y-2"
             >
               {messages.length === 0 && (
-                <div className="text-center text-white/30 py-20">No messages yet</div>
+                <div className="text-center text-white/20 py-20 text-sm" style={{ fontFamily: 'var(--font-playfair)' }}>
+                  No messages yet
+                </div>
               )}
               {messages.map((msg, i) => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur hover:bg-white/8 transition-all"
+                  transition={{ delay: i * 0.02 }}
+                  className="flex items-start gap-6 p-5 rounded-xl hover:bg-white/02 transition-all group"
+                  style={{ border: '1px solid rgba(255,255,255,0.04)' }}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-white/60 text-sm font-semibold">{msg.sender_name}</span>
-                    <div className="flex gap-2 flex-wrap justify-end">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${intentBadge(msg.intent)}`}>
-                        {msg.intent}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${sentimentBadge(msg.sentiment)}`}>
-                        {msg.sentiment}
-                      </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/40">
-                        {Math.round(msg.confidence * 100)}% confidence
-                      </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/40">
-                        urgency: {msg.urgency}
-                      </span>
+                  <div className="flex-shrink-0 mt-1">
+                    {msg.intent === 'emergency' && <AlertTriangle size={14} className="text-red-500" />}
+                    {msg.intent === 'question' && <HelpCircle size={14} className="text-white/40" />}
+                    {msg.intent === 'normal' && <CheckCircle size={14} className="text-white/20" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm mb-1 truncate" style={{ fontFamily: 'var(--font-playfair)' }}>
+                      {msg.content}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs text-white/20">
+                      <span>{msg.sender_name}</span>
+                      <span>·</span>
+                      <span>{msg.sentiment}</span>
+                      <span>·</span>
+                      <span>{Math.round(msg.confidence * 100)}% confidence</span>
+                      <span>·</span>
+                      <span>urgency {msg.urgency}</span>
                     </div>
                   </div>
-                  <p className="text-white">{msg.content}</p>
-                  <p className="text-white/30 text-xs mt-2">
-                    {new Date(msg.created_at).toLocaleString()}
-                  </p>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-bold"
+                      style={{
+                        background: msg.intent === 'emergency' ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)',
+                        color: msg.intent === 'emergency' ? '#ef4444' : 'rgba(255,255,255,0.3)',
+                        border: `1px solid ${msg.intent === 'emergency' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                      }}
+                    >
+                      {msg.intent}
+                    </span>
+                    <span className="text-white/10 text-xs" style={{ fontFamily: 'var(--font-playfair)' }}>
+                      {new Date(msg.created_at).toLocaleTimeString()}
+                    </span>
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
           )}
 
-          {/* Users Tab */}
           {tab === 'users' && (
             <motion.div
               key="users"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid grid-cols-2 gap-4"
+              className="grid grid-cols-3 gap-4"
             >
-              {profiles.length === 0 && (
-                <div className="text-center text-white/30 py-20 col-span-2">No users yet</div>
-              )}
               {profiles.map((p, i) => (
                 <motion.div
                   key={p.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1 }}
                   whileHover={{ y: -4 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur"
+                  className="p-6 rounded-2xl transition-all"
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center font-bold">
-                      {(p.full_name || 'U')[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="text-white font-bold">{p.full_name || 'Unknown'}</div>
-                      <div className="text-white/40 text-xs">{new Date(p.created_at).toLocaleDateString()}</div>
-                    </div>
+                  <div
+                    className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center font-black text-red-400 mb-4"
+                  >
+                    {(p.full_name || 'U')[0].toUpperCase()}
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full font-bold capitalize ${disabilityColor(p.disability_type)}`}>
+                  <div className="font-bold text-sm text-white mb-1">{p.full_name || 'Unknown'}</div>
+                  <div className="text-white/20 text-xs mb-3" style={{ fontFamily: 'var(--font-playfair)' }}>
+                    {new Date(p.created_at).toLocaleDateString()}
+                  </div>
+                  <span
+                    className="text-xs px-3 py-1 rounded-full font-bold tracking-wide capitalize"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
+                  >
                     {p.disability_type}
                   </span>
                 </motion.div>
@@ -249,62 +223,59 @@ export default function Admin() {
             </motion.div>
           )}
 
-          {/* ML Stats Tab */}
           {tab === 'ml' && (
             <motion.div
               key="ml"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
+              className="grid grid-cols-2 gap-4"
             >
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur">
-                <h3 className="font-black text-lg mb-4">🧠 ML Pipeline Info</h3>
+              <div className="p-8 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="text-red-500 text-xs tracking-[0.3em] uppercase font-medium mb-6">Pipeline Info</div>
                 {[
-                  { label: 'Intent Classifier', value: 'Rule-based + Keyword Matching', status: 'Active' },
-                  { label: 'Sentiment Analyzer', value: 'Lexicon-based (Positive/Negative/Neutral)', status: 'Active' },
-                  { label: 'Urgency Scorer', value: 'Intent-weighted (1-10 scale)', status: 'Active' },
-                  { label: 'Confidence Score', value: 'Per-classification probability', status: 'Active' },
-                  { label: 'Emergency Keywords', value: 'help, fire, danger, ambulance, bleeding...', status: 'Active' },
-                  { label: 'Question Keywords', value: 'what, where, when, how, why, who...', status: 'Active' },
+                  { label: 'Intent Classifier', value: 'Keyword + Rule-based' },
+                  { label: 'Sentiment Analyzer', value: 'Lexicon-based' },
+                  { label: 'Urgency Scorer', value: 'Intent-weighted 1–10' },
+                  { label: 'Confidence Score', value: 'Per-classification' },
+                  { label: 'Emergency Keywords', value: 'help, fire, danger...' },
+                  { label: 'Question Keywords', value: 'what, where, when...' },
                 ].map((item, i) => (
                   <motion.div
                     key={item.label}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="flex justify-between items-center py-3 border-b border-white/5 last:border-0"
+                    transition={{ delay: i * 0.08 }}
+                    className="flex justify-between items-center py-3 border-b last:border-0"
+                    style={{ borderColor: 'rgba(255,255,255,0.04)' }}
                   >
-                    <div>
-                      <div className="text-white font-semibold text-sm">{item.label}</div>
-                      <div className="text-white/40 text-xs mt-0.5">{item.value}</div>
-                    </div>
-                    <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full border border-green-500/30">
-                      {item.status}
-                    </span>
+                    <span className="text-white/60 text-sm font-medium">{item.label}</span>
+                    <span className="text-white/20 text-xs" style={{ fontFamily: 'var(--font-playfair)' }}>{item.value}</span>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Intent distribution bar */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur">
-                <h3 className="font-black text-lg mb-4">📊 Intent Distribution</h3>
+              <div className="p-8 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="text-red-500 text-xs tracking-[0.3em] uppercase font-medium mb-6">Intent Distribution</div>
                 {[
-                  { label: 'Normal', count: stats.normal, total: stats.total, color: 'bg-green-500' },
-                  { label: 'Question', count: stats.question, total: stats.total, color: 'bg-yellow-400' },
-                  { label: 'Emergency', count: stats.emergency, total: stats.total, color: 'bg-red-500' },
+                  { label: 'Normal', count: stats.normal, color: 'rgba(255,255,255,0.6)' },
+                  { label: 'Question', count: stats.question, color: 'rgba(255,255,255,0.3)' },
+                  { label: 'Emergency', count: stats.emergency, color: '#ef4444' },
                 ].map((item, i) => (
-                  <div key={item.label} className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-white/70">{item.label}</span>
-                      <span className="text-white/50">{item.count} / {item.total}</span>
+                  <div key={item.label} className="mb-6 last:mb-0">
+                    <div className="flex justify-between text-xs mb-2">
+                      <span style={{ color: item.color }}>{item.label}</span>
+                      <span className="text-white/20" style={{ fontFamily: 'var(--font-playfair)' }}>
+                        {item.count} / {stats.total}
+                      </span>
                     </div>
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-px bg-white/06 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: item.total > 0 ? `${(item.count / item.total) * 100}%` : '0%' }}
-                        transition={{ duration: 1, delay: 0.3 + i * 0.2, ease: 'easeOut' }}
-                        className={`h-full ${item.color} rounded-full`}
+                        animate={{ width: stats.total > 0 ? `${(item.count / stats.total) * 100}%` : '0%' }}
+                        transition={{ duration: 1.2, delay: 0.3 + i * 0.2, ease: 'easeOut' }}
+                        className="h-full rounded-full"
+                        style={{ background: item.color }}
                       />
                     </div>
                   </div>
