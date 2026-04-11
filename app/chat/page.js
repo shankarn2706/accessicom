@@ -14,7 +14,7 @@ const supabase = createClient(
 )
 
 export default function Chat() {
-  const { user } = useUser()
+  const { user, isLoaded } = useUser()
   const router = useRouter()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -23,7 +23,10 @@ export default function Chat() {
   const [emergency, setEmergency] = useState(null)
   const bottomRef = useRef(null)
 
-  useEffect(() => { if (user) fetchProfile() }, [user])
+  useEffect(() => {
+    if (isLoaded && user) fetchProfile()
+    if (isLoaded && !user) router.push('/sign-in')
+  }, [isLoaded, user])
 
   useEffect(() => {
     fetchMessages()
@@ -47,9 +50,26 @@ export default function Chat() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   const fetchProfile = async () => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    if (!data) router.push('/onboarding')
-    else setProfile(data)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Profile fetch error:', error)
+        return
+      }
+
+      if (!data) {
+        router.push('/onboarding')
+      } else {
+        setProfile(data)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const fetchMessages = async () => {
@@ -93,7 +113,7 @@ export default function Chat() {
   }
 
   const sendMessage = async () => {
-    if (!input.trim()) return
+    if (!input.trim() || !user) return
     const { intent, confidence } = classifyMessage(input)
     const sentiment = analyzeSentiment(input)
     const urgency = getUrgency(intent)
@@ -142,7 +162,7 @@ export default function Chat() {
     },
   }
 
-  if (!profile) return (
+  if (!isLoaded || !profile) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
       <motion.div
         animate={{ rotate: 360 }}
@@ -155,19 +175,13 @@ export default function Chat() {
   return (
     <main className="min-h-screen bg-black text-white flex flex-col" style={{ fontFamily: 'var(--font-syne)' }}>
 
-      {/* Video Background */}
       <div className="fixed inset-0 z-0">
-        <video
-          autoPlay muted loop playsInline
-          className="w-full h-full object-cover"
-          style={{ opacity: 0.25 }}
-        >
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover" style={{ opacity: 0.25 }}>
           <source src="/chat-bg.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.4), rgba(0,0,0,0.8))' }} />
       </div>
 
-      {/* Emergency Banner */}
       <AnimatePresence>
         {emergency && (
           <motion.div
@@ -196,12 +210,10 @@ export default function Chat() {
         )}
       </AnimatePresence>
 
-      {/* Navbar */}
       <div className="relative z-10">
         <Navbar active="Chat" />
       </div>
 
-      {/* Mode bar */}
       <div
         className="relative z-10 flex items-center justify-between px-8 py-2.5 border-b"
         style={{ borderColor: 'rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.4)' }}
@@ -238,7 +250,6 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Messages */}
       <div className="relative z-10 flex-1 overflow-y-auto px-8 py-6 space-y-3">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-64">
@@ -347,7 +358,6 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div
         className="relative z-10 px-8 py-5 border-t"
         style={{
