@@ -21,63 +21,48 @@ const types = [
 ]
 
 export default function Onboarding() {
-  const { user, isLoaded } = useUser()
+  const { user } = useUser()
   const router = useRouter()
   const [selected, setSelected] = useState('general')
   const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
 
   const handleSubmit = async () => {
-    if (!user) return
     setLoading(true)
-    setErrorMsg('')
     try {
-      const { error } = await supabase.from('profiles').upsert({
+      await supabase.from('profiles').upsert({
         id: user.id,
         full_name: user.fullName || user.emailAddresses[0].emailAddress,
         disability_type: selected,
       }, { onConflict: 'id' })
-
-      if (error) {
-        console.error('Supabase error:', error)
-        setErrorMsg('Failed to save. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      router.push('/chat')
-    } catch (err) {
-      console.error(err)
-      setErrorMsg('Something went wrong. Please try again.')
-      setLoading(false)
-    }
+    } catch (err) { console.error(err) }
+    router.push('/chat')
   }
-
-  if (!isLoaded) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full"
-      />
-    </div>
-  )
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col" style={{ fontFamily: 'var(--font-syne)' }}>
+
+      {/* Video Background */}
       <div className="fixed inset-0 z-0">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover" style={{ opacity: 0.2 }}>
+        <video
+          autoPlay muted loop playsInline
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.2 }}
+        >
           <source src="/chat-bg.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5), rgba(0,0,0,0.9))' }} />
       </div>
 
+      {/* Navbar */}
       <div className="relative z-10">
         <Navbar active="Home" />
       </div>
 
+      {/* Content */}
       <div className="relative z-10 flex-1 flex items-center justify-center px-8 py-12">
         <div className="w-full max-w-2xl">
+
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -98,6 +83,7 @@ export default function Onboarding() {
             </p>
           </motion.div>
 
+          {/* Options */}
           <div className="space-y-2 mb-8">
             {types.map((t, i) => (
               <motion.button
@@ -146,10 +132,7 @@ export default function Onboarding() {
             ))}
           </div>
 
-          {errorMsg && (
-            <p className="text-red-400 text-sm mb-4">{errorMsg}</p>
-          )}
-
+          {/* Submit */}
           <motion.button
             onClick={handleSubmit}
             disabled={loading}
